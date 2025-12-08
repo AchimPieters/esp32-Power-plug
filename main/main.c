@@ -1,5 +1,5 @@
 /**
-   Copyright 2025 Achim Pieters | StudioPieters®
+   Copyright 2026 Achim Pieters | StudioPieters®
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,7 @@
 #define BUTTON_GPIO      CONFIG_ESP_BUTTON_GPIO
 #define RELAY_GPIO       CONFIG_ESP_RELAY_GPIO
 #define BLUE_LED_GPIO    CONFIG_ESP_BLUE_LED_GPIO
+#define RED_LED_GPIO     CONFIG_ESP_RED_LED_GPIO   // Rode LED: gereserveerd voor LCM / lifecycle
 
 static const char *RELAY_TAG   = "RELAY";
 static const char *BUTTON_TAG  = "BUTTON";
@@ -53,7 +54,7 @@ static inline void relay_write(bool on) {
 }
 
 static inline void blue_led_write(bool on) {
-    // Single LED used both as relay indicator and identify LED (active low)
+    // Blauwe LED: uitsluitend als aan/uit-indicator voor de relay (active low)
     gpio_set_level(BLUE_LED_GPIO, on ? 0 : 1);
 }
 
@@ -71,7 +72,7 @@ static void relay_set_state(bool on, bool notify_homekit) {
 
     // Hardware aansturen
     relay_write(relay_on);
-    blue_led_write(relay_on);
+    blue_led_write(relay_on);   // Blauwe LED volgt altijd de relay-status
 
     ESP_LOGI(RELAY_TAG, "Relay state -> %s", relay_on ? "ON" : "OFF");
 
@@ -91,9 +92,13 @@ void gpio_init(void) {
     gpio_reset_pin(RELAY_GPIO);
     gpio_set_direction(RELAY_GPIO, GPIO_MODE_OUTPUT);
 
-    // Blue LED
+    // Blauwe LED (aan/uit)
     gpio_reset_pin(BLUE_LED_GPIO);
     gpio_set_direction(BLUE_LED_GPIO, GPIO_MODE_OUTPUT);
+
+    // Let op:
+    // De rode LED (RED_LED_GPIO) wordt gebruikt door de lifecycle / LCM-library
+    // en wordt hier NIET geconfigureerd of aangestuurd, zodat er geen conflict ontstaat.
 
     // Initial state: alles uit, in sync brengen
     relay_on = false;
